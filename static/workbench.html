@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>新媒体信宣智能体 · 采编台</title>
+  <!-- 进程令牌注入(server.py 启动时替换 __AUTH_TOKEN__) -->
+  <script>window.AUTH_TOKEN = "__AUTH_TOKEN__";</script>
+  <!-- tokens.css 是唯一配色来源: 深色(默认)/浅色/纸质三主题都只改它 -->
+  <link rel="stylesheet" href="static/tokens.css" />
+  <link rel="stylesheet" href="static/workbench.css" />
+</head>
+<body class="wb-body">
+
+<!-- ================= 顶栏：状态 + 两个入口（命令面板走 ⌘K，不占按钮） ================= -->
+<header class="wb-bar">
+  <div class="wb-bar-left">
+    <span class="wb-logo">新媒体信宣智能体</span>
+    <span class="wb-chip" id="wb-seq-chip">seq -</span>
+    <span class="wb-status" id="wb-status">把左边素材拖到中间 · 按 ⌘K（Ctrl+K）打开命令</span>
+  </div>
+  <div class="wb-bar-right">
+    <button class="wb-ico" id="wb-theme-btn" onclick="WBS.toggleTheme()" title="深色 / 浅色 / 纸质">深色</button>
+    <button class="wb-ico wb-ico-strong" onclick="WBS.openSettings()" title="账号与 API 配置">
+      <span id="wb-user-chip">设置</span></button>
+  </div>
+</header>
+
+<main class="wb-grid">
+
+  <!-- ================= 左栏：素材池（唯一的入口在这里） ================= -->
+  <section class="wb-col wb-col-pool">
+    <div class="wb-col-head">
+      <h2>素材池</h2>
+      <span class="wb-dim" id="wb-mat-count">0 条</span>
+    </div>
+
+    <div class="wb-intake">
+      <textarea id="wb-in-text" rows="3"
+        placeholder="粘一段素材进来，停一下自动切句 → 点「存进去」"></textarea>
+      <div class="wb-intake-row">
+        <select id="wb-in-source" title="来源通道：决定这条素材在核验时按几档权威度计算（不显示分数，避免把判断变成算术题）">
+          <option value="official_doc">官方文件</option>
+          <option value="organizer" selected>主办方</option>
+          <option value="on_site">现场 / 签到表</option>
+          <option value="member">成员口述</option>
+          <option value="hearsay">转述 / 截图</option>
+        </select>
+        <button class="wb-btn wb-btn-primary" id="wb-ingest-btn" onclick="WBS.ingest()">存进去</button>
+      </div>
+      <div class="wb-in-list" id="wb-in-list"></div>
+    </div>
+
+    <div class="wb-scroll wb-mats" id="wb-mat-list"></div>
+  </section>
+
+  <!-- ================= 中栏：上=拖拽区，下=角色 ================= -->
+  <section class="wb-col wb-col-draft">
+    <div class="wb-col-head">
+      <h2>这一稿</h2>
+      <span class="wb-dim" id="wb-draft-meta">0 块</span>
+    </div>
+
+    <div class="wb-dropzone" id="wb-boardwrap">
+      <div class="wb-board" id="wb-board"></div>
+      <div class="wb-drop-hint" id="wb-drop-hint">把左边的素材拖到这里 · 先拖的在上</div>
+    </div>
+
+    <div class="wb-roles">
+      <div class="wb-roles-head">
+        <span>叫谁来帮你改</span>
+        <span class="wb-dim" id="wb-role-count">未选</span>
+      </div>
+      <div class="wb-role-list" id="wb-role-list"></div>
+      <button class="wb-btn wb-btn-primary wb-btn-go" id="wb-assist-btn"
+              onclick="WBS.startAssist()">启动智能辅助</button>
+      <input id="wb-ai-input" placeholder="问一句，或点名某个角色…" />
+    </div>
+  </section>
+
+  <!-- ================= 右栏：上=AI 消息，下=三渠道预览 ================= -->
+  <section class="wb-col wb-col-out">
+    <div class="wb-ai">
+      <div class="wb-col-head">
+        <h2>智能辅助</h2>
+        <span class="wb-dim" id="wb-ai-state">未启动</span>
+      </div>
+      <div class="wb-scroll wb-ai-log" id="wb-ai-log">
+        <div class="wb-empty">勾上左边角色、点「启动智能辅助」，各角色会在这里逐条给出意见；
+          每条带「应用」的可以直接改稿。</div>
+      </div>
+    </div>
+
+    <div class="wb-pv">
+      <div class="wb-col-head">
+        <h2>三渠道预览</h2>
+        <span class="wb-dim" id="wb-pv-state">实时</span>
+      </div>
+      <div class="wb-pv-grid" id="wb-pv-grid">
+        <article class="wb-pv-card" id="wb-pv-wechat"></article>
+        <article class="wb-pv-card" id="wb-pv-shortvideo"></article>
+        <article class="wb-pv-card" id="wb-pv-poster"></article>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= 设置：账号 / API / 外观 ================= -->
+<div id="wb-set" class="modal hidden" onclick="WBS.closeSettingsMask(event)">
+  <div class="modal-content wb-set">
+    <div class="modal-header">
+      <h2 class="modal-title">设置</h2>
+      <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closeSettings()">✕</span>
+    </div>
+    <div class="modal-body">
+
+      <!-- 账号 -->
+      <section class="wb-set-sec">
+        <h3 class="wb-set-h">账号</h3>
+        <div id="wb-set-user" class="wb-set-user"></div>
+        <div id="wb-set-guest">
+          <div class="wb-set-row">
+            <input class="input" id="wb-set-name" placeholder="账号（2-20 位）" autocomplete="username" />
+            <input class="input" id="wb-set-pass" type="password" placeholder="密码（至少 6 位）"
+                   autocomplete="current-password" />
+          </div>
+          <div class="wb-set-row">
+            <button class="wb-btn wb-btn-primary" onclick="WBS.doRegister()">注册并登录</button>
+            <button class="wb-btn" onclick="WBS.doLogin()">登录</button>
+            <span class="wb-hint">账号只决定用谁的 API Key；不登录也能用，全部功能零 LLM 可跑。</span>
+          </div>
+        </div>
+        <div class="wb-hint" id="wb-set-status"></div>
+      </section>
+
+      <!-- API -->
+      <section class="wb-set-sec">
+        <h3 class="wb-set-h">API 配置（可选）</h3>
+        <div class="wb-set-grid">
+          <label>服务商
+            <select class="input" id="wb-llm-provider">
+              <option value="openai">openai（兼容）</option>
+              <option value="deepseek">deepseek</option>
+            </select>
+          </label>
+          <label>模型名
+            <input class="input" id="wb-llm-model" placeholder="deepseek-v4-flash" />
+          </label>
+          <label class="wb-set-wide">API Base
+            <input class="input" id="wb-llm-base" placeholder="https://api.deepseek.com" />
+          </label>
+          <label class="wb-set-wide">API Key
+            <input class="input" id="wb-llm-key" type="password" placeholder="sk-…（只存在本机）" />
+          </label>
+        </div>
+        <div class="wb-set-row">
+          <button class="wb-btn wb-btn-primary" onclick="WBS.saveLlm()">保存</button>
+          <button class="wb-btn" onclick="WBS.testLlm()">测试连通</button>
+          <button class="wb-btn wb-btn-quiet" onclick="WBS.clearLlm()">清除</button>
+        </div>
+        <div class="wb-hint" id="wb-llm-status">没配也能用：六角色建议与三渠道预览都是确定性实现。</div>
+      </section>
+
+      <!-- 外观 -->
+      <section class="wb-set-sec">
+        <h3 class="wb-set-h">外观</h3>
+        <div class="wb-set-row" id="wb-theme-row"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- 待核实清单(抽屉) -->
+<div id="wb-cd-mask" class="wb-drawer-mask hidden" onclick="WBS.closeChecklist()"></div>
+<aside id="wb-cd-drawer" class="wb-drawer hidden">
+  <div class="wb-drawer-head">
+    <h2 class="panel-title">待核实清单 <span class="wb-sub" id="wb-cd-sum">-</span></h2>
+    <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closeChecklist()">✕</span>
+  </div>
+  <div class="wb-hint">这里只列"需要你去核实的事"，不是审核结论。矛盾项并列两个版本，由你选哪个为准。</div>
+  <div class="wb-drawer-body" id="wb-cd-body"></div>
+</aside>
+
+<!-- 命令面板(⌘K / Ctrl+K)：低频动作都收在这里，所以顶栏不用摆一排按钮 -->
+<div id="wb-palette" class="modal hidden" onclick="WBS.closePaletteMask(event)">
+  <div class="modal-content wb-palette-content">
+    <div class="modal-header">
+      <h2 class="modal-title">命令 <span class="wb-sub">⌘K / Ctrl+K</span></h2>
+      <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closePalette()">✕</span>
+    </div>
+    <input class="input" id="wb-palette-input" placeholder="输入来筛选：核验 / 发布 / 导出 / 选题…" />
+    <div class="modal-body wb-palette-body" id="wb-palette-list"></div>
+  </div>
+</div>
+
+<!-- 选题 -->
+<div id="wb-topics" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">选题 <span class="wb-sub">缺口驱动的确定性扫描</span></h2>
+      <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closeTopics()">✕</span>
+    </div>
+    <div class="wb-in-actions">
+      <button class="wb-btn" onclick="WBS.scanTopics()">扫描一次(入库)</button>
+      <button class="wb-btn" onclick="WBS.loadTopics()">只看选题库</button>
+      <span class="wb-hint" id="wb-topic-hint">排序 = 缺口数 × 类型权重 × 素材来源可信度</span>
+    </div>
+    <div class="modal-body wb-in-list" id="wb-topic-list"></div>
+  </div>
+</div>
+
+<!-- 仪表盘 -->
+<div id="wb-dash" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">仪表盘 · 确定性操作 vs LLM 调用</h2>
+      <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closeDashboard()">✕</span>
+    </div>
+    <div class="modal-body" id="wb-dash-body"></div>
+  </div>
+</div>
+
+<!-- 审核记录 -->
+<div id="wb-review" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">审核记录 · 证据与留痕</h2>
+      <span class="modal-close" role="button" tabindex="0" title="关闭" onclick="WBS.closeReview()">✕</span>
+    </div>
+    <div class="wb-in-actions">
+      <button class="wb-btn" onclick="WBS.exportReview()">下载 Markdown</button>
+      <span class="wb-hint">本记录由系统确定性生成，提供核验证据与操作留痕；审核结论由人作出。</span>
+    </div>
+    <div class="modal-body" id="wb-review-body"></div>
+  </div>
+</div>
+
+<!-- 拖拽投放光标与依赖连线叠层 -->
+<div id="wb-dropmark" class="wb-dropmark hidden"></div>
+<svg id="wb-links" class="wb-links" aria-hidden="true"></svg>
+
+<script src="static/doc-board.js"></script>
+<script src="static/links.js"></script>
+<script src="static/workbench.js"></script>
+</body>
+</html>

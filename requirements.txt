@@ -1,0 +1,10 @@
+# 核心档依赖（只这两个就能跑完整演示）
+# 装法:  python -m pip install -r requirements.txt
+#
+# 覆盖的功能: 素材录入 / 逐句裁决 / 五类缺口 / 缺口选题 / 成稿决策链 /
+#            断言级核验 / 双轨渲染 / 三渠道实时预览 / 六角色确定性辅助 /
+#            待核实清单 / 审核记录 / 回滚 / 账号与 API 配置 / 全部测试与工具
+#
+# 大模型与向量都是可选档, 见 requirements-optional.txt 与 交付说明.md
+starlette>=0.37
+uvicorn>=0.29

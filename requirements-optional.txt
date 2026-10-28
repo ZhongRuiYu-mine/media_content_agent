@@ -1,0 +1,20 @@
+# 可选档依赖（不装也能跑核心功能，见 交付说明.md）
+#
+# 装法示例:  python -m pip install -r requirements-optional.txt
+
+# ---- 第②档：大模型 / 团队复盘 ----
+# openjiuwen 不是 PyPI 包：它是本项目依赖的 Python 运行时（jiWen 提供）。
+# 目标机上装好之后, 界面「设置」里填 API Key 即可用团队路线；
+# 没装 → 六角色自动落到确定性版本, 界面会写明"改走确定性版本"。
+#   openjiuwen    # 由 jiWen 运行时提供，不走 pip
+# swarmflow 也由该运行时提供（团队编排脚本用）
+
+# ---- 第③档：素材语义检索（可选，默认关闭）----
+# 二选一即可：
+#  ① 用 OpenAI 兼容 /embeddings 端点（推荐，不占内存）→ 只配 .env，不装包
+#  ② 进程内加载本地模型 → 需要下面两个 + 模型目录
+# numpy
+# sentence-transformers
+
+# ---- 选题库（可选，不可用即文件兜底）----
+# pymongo

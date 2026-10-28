@@ -1,0 +1,178 @@
+/* ============================================================================
+ * tokens.css — 颜色令牌（新媒体信宣智能体工作台）
+ *
+ * 设计目标（来自需求）：
+ *   1) 深色为主：长时间读稿、改稿不疲劳；
+ *   2) 柔和护眼：不用纯黑 `#000`，不用纯白 `#fff`；底色分层、文字微暖；
+ *   3) 适配新闻写作：强调色克制、把颜色让给**信息语义**（溯源/阻断/警告/已核验/已裁定）。
+ *
+ * 三条硬规矩（改这个文件时请守住，改完跑 tools/check_contrast.py）：
+ *   A. 正文文字对比度 ≥ 7:1；次要文字 ≥ 4.5:1；弱提示 ≥ 3.5:1（WCAG AA/AAA 口径）。
+ *   B. 面积大用低饱和（面板、卡片底），面积小才允许高饱和（徽章、细描边、图钉）。
+ *   C. 语义色只表达信息含义，不做装饰。同一语义在三个主题里必须是同一个色相家族。
+ *
+ * 主题切换：<html data-theme="dark|light|paper">，默认 dark（由 html 上的属性给定，
+ * 缺失时回落到 dark）。所有主题只改这一层，workbench.css 只引用令牌。
+ * ========================================================================== */
+
+/* ---------------------------------------------------------------- 深色（默认） */
+:root,
+:root[data-theme="dark"] {
+  /* 面：三层，越靠前越"近"用户 */
+  --bg-base: #121316;        /* 页面底 */
+  --bg-surface: #17191d;     /* 面板、卡片 */
+  --bg-raised: #1d2026;      /* 浮起：弹窗、抽屉、悬浮证据条 */
+  --bg-sunken: #0e0f12;       /* 下沉：代码块、时间线凹槽、预览纸面 */
+  --bg-hover: #212429;        /* 悬停 */
+  --bg-active: #262a31;       /* 选中／按下 */
+
+  /* 描边：两级 */
+  --bd-weak: #262a31;
+  --bd-strong: #343941;
+  --bd-focus: #6fb79a;        /* 焦点环：与强调色同族 */
+
+  /* 文字：暖中性，不用纯白。三档明度是按 tools/check_contrast.py 调出来的：
+     txt-1 在每层底上 ≥7:1（正文 AAA），txt-2 ≥4.5:1，txt-3 ≥3.5:1。 */
+  --txt-1: #e4e1dc;           /* 正文、稿件（暖 2%） */
+  --txt-2: #b0aca6;           /* 次要：说明、元信息 */
+  --txt-3: #8e8a83;           /* 弱：占位、分隔、序号 */
+  --txt-on-acc: #0e1512;      /* 落在强调色块上的文字 */
+
+  /* 强调：低饱和青绿，用于可点／当前态／溯源 */
+  --acc: #7fbca4;
+  --acc-strong: #9ed0ba;
+  --acc-weak: #4e7f6d;
+  --acc-bg: #17241f;
+  --acc-bd: #2c4a3f;
+
+  /* 信息语义（色相家族在三个主题里保持一致） */
+  --c-cite: #7fbca4;          /* 溯源：可点回原素材、同步高亮 */
+  --c-cite-bg: #17241f;
+  --c-cite-bd: #2c4a3f;
+  --c-block: #d98a8a;         /* 阻断：无据／矛盾／涉隐私 */
+  --c-block-bg: #241a1d;
+  --c-block-bd: #4a2e33;
+  --c-warn: #d8b37e;          /* 警告：孤证、过期（往届信息） */
+  --c-warn-bg: #23201a;
+  --c-warn-bd: #453b2b;
+  --c-ok: #8fb08a;            /* 已核验、导出凭证 */
+  --c-ok-bg: #1b211b;
+  --c-ok-bd: #33402f;
+  --c-resolve: #9c93c4;       /* 已裁定：用户裁决／按权威度先裁定 */
+  --c-resolve-bg: #1f1e27;
+  --c-resolve-bd: #3a3750;
+  --c-info: #8494a6;          /* 中性信息：计数、元信息 */
+  --c-info-bg: #1b1e23;
+  --c-info-bd: #2f353d;
+
+  /* 权威度五档（来源通道 → 信任度；色相区分来源性质，明度按对比度下限校准：
+     五档在 --bg-sunken / 素材卡上都必须 ≥4.5:1，否则"看不清来源"就等于没有权威度） */
+  --auth-official: #c79a5b;   /* 1.00 盖章文件、正式通知（金） */
+  --auth-organizer: #7ab0a0;  /* 0.85 主办方、群公告（青灰） */
+  --auth-onsite: #93a8c4;     /* 0.70 现场照片、签到表（石板蓝） */
+  --auth-member: #b09a86;     /* 0.50 干事口述（棕） */
+  --auth-hearsay: #948f88;    /* 0.30 转述、截图（灰） */
+  --auth-track: #2b2f36;      /* 素材卡左侧细条底 */
+
+  /* 阴影：深色下靠描边分层，阴影只做很轻的一层 */
+  --sh-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --sh-2: 0 6px 20px rgba(0, 0, 0, .45);
+  --sh-3: 0 14px 40px rgba(0, 0, 0, .55);
+
+  /* 字体与阅读度量 */
+  --font-ui: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --font-read: "Songti SC", "SimSun", "Source Han Serif SC", "Noto Serif SC", Georgia, serif;
+  --font-mono: "Cascadia Mono", "Consolas", "JetBrains Mono", ui-monospace, monospace;
+  --read-size: 16.5px;        /* 稿件正文字号 */
+  --read-lh: 1.95;             /* 稿件行高：长文阅读不挤 */
+  --read-measure: 40ch;        /* 每行字数上限（中文约 36–40 字） */
+  --ui-size: 13.5px;
+  --ui-lh: 1.6;
+  --r-1: 4px; --r-2: 6px; --r-3: 10px; --r-4: 14px;
+}
+
+/* ------------------------------------------------------------------ 浅色 */
+:root[data-theme="light"] {
+  --bg-base: #f7f6f3;
+  --bg-surface: #ffffff;
+  --bg-raised: #ffffff;
+  --bg-sunken: #eeede9;
+  --bg-hover: #f1f0ec;
+  --bg-active: #e8e7e2;
+
+  --bd-weak: #e2e0da;
+  --bd-strong: #cfccc4;
+  --bd-focus: #3f7f66;
+
+  --txt-1: #23262b;
+  --txt-2: #55595f;
+  --txt-3: #85888d;
+  --txt-on-acc: #f7faf8;
+
+  --acc: #2f6f58;
+  --acc-strong: #245845;
+  --acc-weak: #6ea48f;
+  --acc-bg: #eaf3ef;
+  --acc-bd: #bcd8cd;
+
+  --c-cite: #2f6f58;   --c-cite-bg: #eaf3ef;   --c-cite-bd: #bcd8cd;
+  --c-block: #a4453f;  --c-block-bg: #fbeffe;  --c-block-bd: #e8c4c1;
+  --c-warn: #8a6320;   --c-warn-bg: #fbf5e8;   --c-warn-bd: #e6d6b4;
+  --c-ok: #3f6b3a;     --c-ok-bg: #eef4ec;     --c-ok-bd: #c6d8c2;
+  --c-resolve: #5b4fa0; --c-resolve-bg: #f0eefb; --c-resolve-bd: #cec8ea;
+  --c-info: #4a5a6b;   --c-info-bg: #eef1f5;   --c-info-bd: #d3dae2;
+
+  --auth-official: #77551b;
+  --auth-organizer: #376a5b;
+  --auth-onsite: #3f5f7f;
+  --auth-member: #6d5540;
+  --auth-hearsay: #666259;
+  --auth-track: #dedbd4;
+
+  --sh-1: 0 1px 2px rgba(30, 30, 30, .06);
+  --sh-2: 0 6px 18px rgba(30, 30, 30, .10);
+  --sh-3: 0 14px 36px rgba(30, 30, 30, .14);
+}
+
+/* --------------------------------------------------------- 纸质（护眼暖白） */
+:root[data-theme="paper"] {
+  --bg-base: #f2ede2;
+  --bg-surface: #f7f3ea;
+  --bg-raised: #fbf8f1;
+  --bg-sunken: #e9e2d3;
+  --bg-hover: #efe8da;
+  --bg-active: #e5dcc9;
+
+  --bd-weak: #ddd3bf;
+  --bd-strong: #c8bba2;
+  --bd-focus: #7d6a3f;
+
+  --txt-1: #332f28;
+  --txt-2: #5f5849;
+  --txt-3: #8b8271;
+  --txt-on-acc: #faf7f0;
+
+  --acc: #7d6a3f;
+  --acc-strong: #665631;
+  --acc-weak: #a8946a;
+  --acc-bg: #efe8d8;
+  --acc-bd: #d3c4a4;
+
+  --c-cite: #4f6b4a;   --c-cite-bg: #eaefe4;   --c-cite-bd: #c9d6c0;
+  --c-block: #9a4a3c;  --c-block-bg: #f6e8e3;  --c-block-bd: #e0c2b8;
+  --c-warn: #8a6320;   --c-warn-bg: #f6efdd;   --c-warn-bd: #dcc9a2;
+  --c-ok: #4f6b4a;     --c-ok-bg: #eaece1;     --c-ok-bd: #cbd0bd;
+  --c-resolve: #5b4f80; --c-resolve-bg: #ece8f3; --c-resolve-bd: #cdc5e0;
+  --c-info: #5c5750;   --c-info-bg: #ece6da;   --c-info-bd: #d6ccb9;
+
+  --auth-official: #74521a;
+  --auth-organizer: #44624a;
+  --auth-onsite: #3a5771;
+  --auth-member: #6b5238;
+  --auth-hearsay: #6a6459;
+  --auth-track: #d9cfba;
+
+  --sh-1: 0 1px 2px rgba(60, 50, 30, .08);
+  --sh-2: 0 6px 18px rgba(60, 50, 30, .12);
+  --sh-3: 0 14px 36px rgba(60, 50, 30, .16);
+}
